@@ -2001,6 +2001,7 @@ NO_QUALITY_SCALE = [
     "occupancy",
     "onboarding",
     "panel_custom",
+    "pf_garage_door",
     "power",
     "proxy",
     "python_script",

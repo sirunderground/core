@@ -1,0 +1,10 @@
+{
+  "domain": "pf_garage_door",
+  "name": "PF Garage Door",
+  "codeowners": ["@sir_underground"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/pf_garage_door",
+  "integration_type": "device",
+  "iot_class": "local_push",
+  "quality_scale": "internal"
+}

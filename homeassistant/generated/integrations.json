@@ -5587,6 +5587,12 @@
       "config_flow": true,
       "iot_class": "assumed_state"
     },
+    "pf_garage_door": {
+      "name": "PF Garage Door",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_push"
+    },
     "pge": {
       "name": "Pacific Gas & Electric (PG&E)",
       "integration_type": "virtual",

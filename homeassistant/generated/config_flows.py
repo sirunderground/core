@@ -615,6 +615,7 @@ FLOWS = {
         "peco",
         "pegel_online",
         "persang_infrared",
+        "pf_garage_door",
         "pglab",
         "philips_js",
         "pi_hole",
