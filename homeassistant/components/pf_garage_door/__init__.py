@@ -13,7 +13,10 @@ _PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.SENSOR]
 async def async_setup_entry(hass: HomeAssistant, entry: GarageDoorConfigEntry) -> bool:
     """Set up Example Air from a config entry."""
     client = GarageDoorClient(
-        entry.data[CONF_HOST], session=async_get_clientsession(hass)
+        entry.data[CONF_HOST],
+        session=async_get_clientsession(hass),
+        username=entry.data["username"],
+        password=entry.data["password"],
     )
 
     coordinator = GarageDoorCoordinator(hass, entry, client)

@@ -27,4 +27,11 @@ class GarageDoorClient:
         """Initialize the client."""
 
     async def get_status(self) -> Status:
-        """Return the current status of the monitor."""
+
+        return Status(
+            name="Garage Door",
+            serial_number="123456789",
+            firmware="1.0.0",
+            position=0,
+            obstruction=False,
+        )
