@@ -1,57 +1,30 @@
-"""Config flow for OpenGarage integration."""
+"""Config flow for the Example Air integration."""
 
 import logging
 from typing import Any, override
 
-import aiohttp
 import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_HOST, CONF_PORT, CONF_VERIFY_SSL
-from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.device_registry import format_mac
 
-from .const import CONF_DEVICE_KEY, DEFAULT_PORT, DOMAIN
+from .const import DOMAIN
+from .pf_garage_door import GarageDoorClient, GarageDoorError
 
 _LOGGER = logging.getLogger(__name__)
 
 STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        probatio.Required(probatio.Secret(CONF_DEVICE_KEY)): str,
-        probatio.Required(CONF_HOST, default="http://"): str,
-        probatio.Optional(CONF_PORT, default=DEFAULT_PORT): int,
-        probatio.Optional(CONF_VERIFY_SSL, default=False): bool,
+        probatio.Required(CONF_HOST): str,
+        probatio.Required(CONF_USERNAME): str,
+        probatio.Required(CONF_PASSWORD): str,
     }
 )
 
 
-async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
-    """Validate the user input allows us to connect.
-
-    Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
-    """
-    open_garage = opengarage.OpenGarage(
-        f"{data[CONF_HOST]}:{data[CONF_PORT]}",
-        data[CONF_DEVICE_KEY],
-        data[CONF_VERIFY_SSL],
-        async_get_clientsession(hass),
-    )
-
-    try:
-        status = await open_garage.update_state()
-    except aiohttp.ClientError as exp:
-        raise CannotConnect from exp
-
-    if status is None:
-        raise InvalidAuth
-
-    return {"title": status.get("name"), "unique_id": format_mac(status["mac"])}
-
-
-class OpenGarageConfigFlow(ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for OpenGarage."""
+class ExampleAirConfigFlow(ConfigFlow, domain=DOMAIN):
+    """Handle a config flow for Example Air."""
 
     VERSION = 1
 
@@ -59,37 +32,32 @@ class OpenGarageConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Handle the initial step."""
-        if user_input is None:
-            return self.async_show_form(
-                step_id="user", data_schema=STEP_USER_DATA_SCHEMA
+        """Handle a flow started by the user."""
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            client = GarageDoorClient(
+                host=user_input[CONF_HOST],
+                username=user_input[CONF_USERNAME],
+                password=user_input[CONF_PASSWORD],
+                session=async_get_clientsession(self.hass),
             )
 
-        errors = {}
+            try:
+                status = await client.get_status()
+            except GarageDoorError:
+                errors["base"] = "cannot_connect"
+            except Exception:
+                _LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
+            else:
+                await self.async_set_unique_id(status.serial_number)
+                self._abort_if_unique_id_configured()
 
-        try:
-            info = await validate_input(self.hass, user_input)
-        except CannotConnect:
-            errors["base"] = "cannot_connect"
-        except InvalidAuth:
-            errors["base"] = "invalid_auth"
-        except Exception:
-            _LOGGER.exception("Unexpected exception")
-            errors["base"] = "unknown"
-        else:
-            await self.async_set_unique_id(info["unique_id"])
-            self._abort_if_unique_id_configured()
-
-            return self.async_create_entry(title=info["title"], data=user_input)
+                return self.async_create_entry(title=status.name, data=user_input)
 
         return self.async_show_form(
-            step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
+            step_id="user",
+            data_schema=STEP_USER_DATA_SCHEMA,
+            errors=errors,
         )
-
-
-class CannotConnect(HomeAssistantError):
-    """Error to indicate we cannot connect."""
-
-
-class InvalidAuth(HomeAssistantError):
-    """Error to indicate there is invalid auth."""
