@@ -26,7 +26,7 @@ class GarageDoorEntity(CoordinatorEntity[GarageDoorCoordinator]):
 
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, status.serial_number)},
-            manufacturer="AmbiqQuebec",
+            manufacturer="AmbiQuébec",
             model="PF Garage Door",
             name=status.name,
             serial_number=status.serial_number,

@@ -7,7 +7,11 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from .coordinator import GarageDoorConfigEntry, GarageDoorCoordinator
 from .pf_garage_door import GarageDoorClient
 
-_PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.SENSOR]
+_PLATFORMS: list[Platform] = [
+    Platform.BINARY_SENSOR,
+    Platform.COVER,
+    Platform.SENSOR,
+]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: GarageDoorConfigEntry) -> bool:

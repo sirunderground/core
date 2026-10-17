@@ -5,7 +5,6 @@ from dataclasses import dataclass
 from typing import override
 
 from homeassistant.components.sensor import (
-    SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
@@ -29,7 +28,6 @@ class GarageDoorSensorEntityDescription(SensorEntityDescription):
 SENSORS: tuple[GarageDoorSensorEntityDescription, ...] = (
     GarageDoorSensorEntityDescription(
         key="position",
-        device_class=SensorDeviceClass.POSITION,
         native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda status: status.position,

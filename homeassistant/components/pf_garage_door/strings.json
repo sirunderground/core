@@ -27,6 +27,11 @@
       "obstruction": {
         "name": "Obstruction"
       }
+    },
+    "cover": {
+      "garage_door": {
+        "name": "Door"
+      }
     }
   }
 }
