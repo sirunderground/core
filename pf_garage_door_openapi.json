@@ -1,0 +1,177 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "PF Garage Door API",
+    "version": "1.0.0",
+    "description": "REST API contract used by the Home Assistant PF Garage Door integration."
+  },
+  "servers": [
+    {
+      "url": "http://{host}",
+      "description": "Garage door controller",
+      "variables": {
+        "host": {
+          "default": "garage-door.local",
+          "description": "Controller hostname or IP address, optionally including a port."
+        }
+      }
+    }
+  ],
+  "security": [
+    {
+      "basicAuth": []
+    }
+  ],
+  "paths": {
+    "/api/v1/status": {
+      "get": {
+        "operationId": "getGarageDoorStatus",
+        "summary": "Get garage door status",
+        "description": "Returns the current reported door position and controller details.",
+        "responses": {
+          "200": {
+            "description": "Current garage door status.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Status"
+                },
+                "example": {
+                  "name": "Garage Door",
+                  "serial_number": "123456789",
+                  "firmware": "1.0.0",
+                  "position": 0,
+                  "obstruction": false
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "5XX": {
+            "$ref": "#/components/responses/ServerError"
+          }
+        }
+      }
+    },
+    "/api/v1/cover/position": {
+      "put": {
+        "operationId": "setGarageDoorPosition",
+        "summary": "Set garage door position",
+        "description": "Requests a target opening percentage. Zero is fully closed and 100 is fully open. The command response acknowledges acceptance; read the status endpoint to observe reported progress.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PositionCommand"
+              },
+              "example": {
+                "position": 65
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Position command accepted."
+          },
+          "400": {
+            "description": "The request body is invalid or the position is outside the allowed range."
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "5XX": {
+            "$ref": "#/components/responses/ServerError"
+          }
+        }
+      }
+    },
+    "/api/v1/cover/stop": {
+      "post": {
+        "operationId": "stopGarageDoor",
+        "summary": "Stop garage door movement",
+        "description": "Requests that the controller stop current door movement.",
+        "responses": {
+          "204": {
+            "description": "Stop command accepted."
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "5XX": {
+            "$ref": "#/components/responses/ServerError"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "basicAuth": {
+        "type": "http",
+        "scheme": "basic"
+      }
+    },
+    "schemas": {
+      "Status": {
+        "type": "object",
+        "required": [
+          "name",
+          "serial_number",
+          "firmware",
+          "position",
+          "obstruction"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Human-readable controller or door name."
+          },
+          "serial_number": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Stable, unique controller serial number."
+          },
+          "firmware": {
+            "type": "string",
+            "description": "Controller firmware version."
+          },
+          "position": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100,
+            "description": "Reported opening percentage: 0 is closed and 100 is open."
+          },
+          "obstruction": {
+            "type": "boolean",
+            "description": "Whether an obstruction is currently detected."
+          }
+        }
+      },
+      "PositionCommand": {
+        "type": "object",
+        "required": ["position"],
+        "properties": {
+          "position": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100,
+            "description": "Target opening percentage: 0 is closed and 100 is open."
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "responses": {
+      "Unauthorized": {
+        "description": "Missing or invalid HTTP Basic credentials."
+      },
+      "ServerError": {
+        "description": "The controller encountered an internal error."
+      }
+    }
+  }
+}

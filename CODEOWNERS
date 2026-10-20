@@ -1448,6 +1448,7 @@ CLAUDE.md @home-assistant/core
 /homeassistant/components/persistent_notification/ @home-assistant/core
 /tests/components/persistent_notification/ @home-assistant/core
 /homeassistant/components/pf_garage_door/ @sir_underground
+/tests/components/pf_garage_door/ @sir_underground
 /homeassistant/components/pglab/ @pglab-electronics
 /tests/components/pglab/ @pglab-electronics
 /homeassistant/components/philips_js/ @elupus
