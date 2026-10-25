@@ -11,6 +11,7 @@ API_VERSION = "/api/v1"
 STATUS_ENDPOINT = f"{API_VERSION}/status"
 POSITION_ENDPOINT = f"{API_VERSION}/cover/position"
 STOP_ENDPOINT = f"{API_VERSION}/cover/stop"
+SUBSCRIPTIONS_ENDPOINT = f"{API_VERSION}/subscriptions"
 
 
 @dataclass
@@ -34,7 +35,8 @@ class GarageDoorClient:
     The API uses HTTP Basic authentication. It exposes GET /api/v1/status,
     returning ``name``, ``serial_number``, ``firmware``, ``position`` (0-100),
     and ``obstruction`` fields; PUT /api/v1/cover/position accepts a JSON
-    ``position`` value, and POST /api/v1/cover/stop stops movement.
+    ``position`` value, and POST /api/v1/cover/stop stops movement. Status
+    subscriptions are managed with PUT and DELETE /api/v1/subscriptions/{id}.
     """
 
     def __init__(
@@ -50,6 +52,11 @@ class GarageDoorClient:
     async def get_status(self) -> Status:
         """Return the current status of the garage door."""
         data = await self._async_request("GET", STATUS_ENDPOINT, expect_json=True)
+        return self.parse_status(data)
+
+    @staticmethod
+    def parse_status(data: Any) -> Status:
+        """Parse and validate a status payload."""
         if not isinstance(data, dict):
             raise GarageDoorError("Invalid status response")
 
@@ -88,12 +95,33 @@ class GarageDoorClient:
         """Stop the door."""
         await self._async_request("POST", STOP_ENDPOINT)
 
+    async def register_subscription(
+        self, subscription_id: str, callback_url: str
+    ) -> None:
+        """Register or update a status callback."""
+        await self._async_request(
+            "PUT",
+            SUBSCRIPTIONS_ENDPOINT,
+            payload={
+                "subscription_id": subscription_id,
+                "callback_url": callback_url,
+            },
+        )
+
+    async def remove_subscription(self, subscription_id: str) -> None:
+        """Remove a status callback."""
+        await self._async_request(
+            "DELETE",
+            SUBSCRIPTIONS_ENDPOINT,
+            payload={"subscription_id": subscription_id},
+        )
+
     async def _async_request(
         self,
         method: str,
         endpoint: str,
         *,
-        payload: dict[str, int] | None = None,
+        payload: dict[str, int | str] | None = None,
         expect_json: bool = False,
     ) -> Any:
         """Send an authenticated request to the controller."""

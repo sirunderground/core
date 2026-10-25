@@ -75,6 +75,37 @@ async def test_cover_commands(
     assert str(aioclient_mock.mock_calls[1][1]) == f"{API_ROOT}/api/v1/cover/stop"
 
 
+async def test_subscription(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Test subscription registration and removal."""
+    subscription_id = "subscription-123"
+    aioclient_mock.put(
+        f"{API_ROOT}/api/v1/subscriptions",
+        status=HTTPStatus.NO_CONTENT,
+    )
+    aioclient_mock.delete(
+        f"{API_ROOT}/api/v1/subscriptions",
+        status=HTTPStatus.NO_CONTENT,
+    )
+    client = create_client(hass)
+
+    await client.register_subscription(
+        subscription_id, "http://homeassistant.local:8123/api/webhook/webhook-123"
+    )
+    await client.remove_subscription(subscription_id)
+
+    assert aioclient_mock.mock_calls[0][0] == "PUT"
+    assert str(aioclient_mock.mock_calls[0][1]) == f"{API_ROOT}/api/v1/subscriptions"
+    assert aioclient_mock.mock_calls[0][2] == {
+        "subscription_id": subscription_id,
+        "callback_url": "http://homeassistant.local:8123/api/webhook/webhook-123",
+    }
+    assert aioclient_mock.mock_calls[1][0] == "DELETE"
+    assert str(aioclient_mock.mock_calls[1][1]) == f"{API_ROOT}/api/v1/subscriptions"
+    assert aioclient_mock.mock_calls[1][2] == {"subscription_id": subscription_id}
+
+
 async def test_invalid_status(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:

@@ -3,6 +3,7 @@
   "name": "PF Garage Door",
   "codeowners": ["@sir_underground"],
   "config_flow": true,
+  "dependencies": ["webhook"],
   "documentation": "https://www.home-assistant.io/integrations/pf_garage_door",
   "integration_type": "device",
   "iot_class": "local_polling",

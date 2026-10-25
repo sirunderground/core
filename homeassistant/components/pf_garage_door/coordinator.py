@@ -33,7 +33,7 @@ class GarageDoorCoordinator(DataUpdateCoordinator[Status]):
             _LOGGER,
             config_entry=config_entry,
             name=DOMAIN,
-            update_interval=timedelta(minutes=1),
+            update_interval=timedelta(seconds=5),
         )
         self.client = client
 
