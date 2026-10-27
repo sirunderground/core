@@ -82,7 +82,8 @@ async def test_subscription(
     subscription_id = "subscription-123"
     aioclient_mock.put(
         f"{API_ROOT}/api/v1/subscriptions",
-        status=HTTPStatus.NO_CONTENT,
+        json={"id": subscription_id},
+        status=HTTPStatus.CREATED,
     )
     aioclient_mock.delete(
         f"{API_ROOT}/api/v1/subscriptions",
@@ -90,20 +91,38 @@ async def test_subscription(
     )
     client = create_client(hass)
 
-    await client.register_subscription(
-        subscription_id, "http://homeassistant.local:8123/api/webhook/webhook-123"
+    assert (
+        await client.register_subscription(
+            "http://homeassistant.local:8123/api/webhook/webhook-123"
+        )
+        == subscription_id
     )
     await client.remove_subscription(subscription_id)
 
     assert aioclient_mock.mock_calls[0][0] == "PUT"
     assert str(aioclient_mock.mock_calls[0][1]) == f"{API_ROOT}/api/v1/subscriptions"
     assert aioclient_mock.mock_calls[0][2] == {
-        "subscription_id": subscription_id,
         "callback_url": "http://homeassistant.local:8123/api/webhook/webhook-123",
     }
     assert aioclient_mock.mock_calls[1][0] == "DELETE"
     assert str(aioclient_mock.mock_calls[1][1]) == f"{API_ROOT}/api/v1/subscriptions"
     assert aioclient_mock.mock_calls[1][2] == {"subscription_id": subscription_id}
+
+
+async def test_invalid_subscription_response(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Test malformed subscription responses are rejected."""
+    aioclient_mock.put(
+        f"{API_ROOT}/api/v1/subscriptions",
+        json={"id": ""},
+        status=HTTPStatus.CREATED,
+    )
+
+    with pytest.raises(GarageDoorError, match="Invalid subscription response"):
+        await create_client(hass).register_subscription(
+            "http://homeassistant.local:8123/api/webhook/webhook-123"
+        )
 
 
 async def test_invalid_status(

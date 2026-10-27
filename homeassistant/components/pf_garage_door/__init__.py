@@ -32,8 +32,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: GarageDoorConfigEntry) -
     entry_data: dict[str, Any] = {**entry.data}
     if CONF_WEBHOOK_ID not in entry_data:
         entry_data[CONF_WEBHOOK_ID] = webhook.async_generate_id()
-    if CONF_SUBSCRIPTION_ID not in entry_data:
-        entry_data[CONF_SUBSCRIPTION_ID] = webhook.async_generate_id()
     if entry_data != entry.data:
         hass.config_entries.async_update_entry(entry, data=entry_data)
 
@@ -84,7 +82,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: GarageDoorConfigEntry) -
                 hass,
                 entry.data[CONF_WEBHOOK_ID],
                 allow_external=False,
-                allow_ip=False,
+                allow_ip=True,
                 prefer_external=False,
             )
         except NoURLAvailableError as err:
@@ -96,15 +94,31 @@ async def async_setup_entry(hass: HomeAssistant, entry: GarageDoorConfigEntry) -
             return
 
         try:
-            await client.register_subscription(
-                entry.data[CONF_SUBSCRIPTION_ID], callback_url
-            )
+            subscription_id = await client.register_subscription(callback_url)
         except GarageDoorError as err:
             _LOGGER.warning(
                 "Unable to register the garage door status subscription; polling "
                 "remains active: %s",
                 err,
             )
+            return
+
+        previous_subscription_id = entry.data.get(CONF_SUBSCRIPTION_ID)
+        hass.config_entries.async_update_entry(
+            entry,
+            data={**entry.data, CONF_SUBSCRIPTION_ID: subscription_id},
+        )
+        if (
+            previous_subscription_id is not None
+            and previous_subscription_id != subscription_id
+        ):
+            try:
+                await client.remove_subscription(previous_subscription_id)
+            except GarageDoorError as err:
+                _LOGGER.warning(
+                    "Unable to remove the replaced garage door status subscription: %s",
+                    err,
+                )
 
     await async_renew_subscription()
     entry.async_on_unload(
@@ -125,12 +139,13 @@ async def async_unload_entry(hass: HomeAssistant, entry: GarageDoorConfigEntry) 
     if not await hass.config_entries.async_unload_platforms(entry, _PLATFORMS):
         return False
 
-    try:
-        await entry.runtime_data.client.remove_subscription(
-            entry.data[CONF_SUBSCRIPTION_ID]
-        )
-    except GarageDoorError as err:
-        _LOGGER.warning("Unable to remove the garage door status subscription: %s", err)
+    if subscription_id := entry.data.get(CONF_SUBSCRIPTION_ID):
+        try:
+            await entry.runtime_data.client.remove_subscription(subscription_id)
+        except GarageDoorError as err:
+            _LOGGER.warning(
+                "Unable to remove the garage door status subscription: %s", err
+            )
 
     webhook.async_unregister(hass, entry.data[CONF_WEBHOOK_ID])
     return True

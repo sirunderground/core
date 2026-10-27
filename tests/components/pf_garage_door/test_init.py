@@ -40,7 +40,8 @@ async def test_webhook_updates_status(
     aioclient_mock.get(f"http://{HOST}/api/v1/status", json=STATUS_RESPONSE)
     aioclient_mock.put(
         f"{API_ROOT}/api/v1/subscriptions",
-        status=HTTPStatus.NO_CONTENT,
+        json={"id": "device-subscription-123"},
+        status=HTTPStatus.CREATED,
     )
     aioclient_mock.delete(
         f"{API_ROOT}/api/v1/subscriptions",
@@ -61,12 +62,14 @@ async def test_webhook_updates_status(
 
     assert await hass.config_entries.async_setup(entry.entry_id)
     coordinator = entry.runtime_data
+    assert entry.data[CONF_SUBSCRIPTION_ID] == "device-subscription-123"
     assert aioclient_mock.mock_calls[1][0] == "PUT"
     assert str(aioclient_mock.mock_calls[1][1]) == f"{API_ROOT}/api/v1/subscriptions"
     assert aioclient_mock.mock_calls[1][2] == {
-        "subscription_id": SUBSCRIPTION_ID,
         "callback_url": f"http://homeassistant.local:8123/api/webhook/{WEBHOOK_ID}",
     }
+    assert aioclient_mock.mock_calls[2][0] == "DELETE"
+    assert aioclient_mock.mock_calls[2][2] == {"subscription_id": SUBSCRIPTION_ID}
 
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(hours=1, seconds=1))
     await hass.async_block_till_done()
@@ -98,7 +101,9 @@ async def test_webhook_updates_status(
     assert await hass.config_entries.async_unload(entry.entry_id)
     assert aioclient_mock.mock_calls[-1][0] == "DELETE"
     assert str(aioclient_mock.mock_calls[-1][1]) == (f"{API_ROOT}/api/v1/subscriptions")
-    assert aioclient_mock.mock_calls[-1][2] == {"subscription_id": SUBSCRIPTION_ID}
+    assert aioclient_mock.mock_calls[-1][2] == {
+        "subscription_id": "device-subscription-123"
+    }
     response = await client.post(
         f"/api/webhook/{WEBHOOK_ID}",
         json={**pushed_status, "position": 20},
@@ -119,6 +124,11 @@ async def test_webhook_rejects_invalid_status(
     )
     aioclient_mock.get(f"http://{HOST}/api/v1/status", json=STATUS_RESPONSE)
     aioclient_mock.put(
+        f"{API_ROOT}/api/v1/subscriptions",
+        json={"id": "device-subscription-123"},
+        status=HTTPStatus.CREATED,
+    )
+    aioclient_mock.delete(
         f"{API_ROOT}/api/v1/subscriptions",
         status=HTTPStatus.NO_CONTENT,
     )

@@ -95,18 +95,22 @@ class GarageDoorClient:
         """Stop the door."""
         await self._async_request("POST", STOP_ENDPOINT)
 
-    async def register_subscription(
-        self, subscription_id: str, callback_url: str
-    ) -> None:
-        """Register or update a status callback."""
-        await self._async_request(
+    async def register_subscription(self, callback_url: str) -> str:
+        """Register a status callback and return its subscription ID."""
+        data = await self._async_request(
             "PUT",
             SUBSCRIPTIONS_ENDPOINT,
             payload={
-                "subscription_id": subscription_id,
                 "callback_url": callback_url,
             },
+            expect_json=True,
         )
+        if not isinstance(data, dict):
+            raise GarageDoorError("Invalid subscription response")
+        subscription_id = data.get("id", data.get("ID"))
+        if not isinstance(subscription_id, str) or not subscription_id:
+            raise GarageDoorError("Invalid subscription response")
+        return subscription_id
 
     async def remove_subscription(self, subscription_id: str) -> None:
         """Remove a status callback."""
