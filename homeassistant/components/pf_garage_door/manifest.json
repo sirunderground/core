@@ -7,5 +7,6 @@
   "documentation": "https://www.home-assistant.io/integrations/pf_garage_door",
   "integration_type": "device",
   "iot_class": "local_polling",
-  "quality_scale": "internal"
+  "quality_scale": "internal",
+  "version": "0.1.0"
 }
