@@ -22,6 +22,7 @@ STATUS_RESPONSE = {
     "firmware": "1.0.0",
     "position": 35,
     "obstruction": False,
+    "state": "stopped",
 }
 
 
@@ -49,6 +50,7 @@ async def test_get_status(
         firmware="1.0.0",
         position=35,
         obstruction=False,
+        state="stopped",
     )
     assert aioclient_mock.mock_calls[0][0] == "GET"
     assert str(aioclient_mock.mock_calls[0][1]) == f"{API_ROOT}/api/v1/status"

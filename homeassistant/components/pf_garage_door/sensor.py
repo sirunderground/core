@@ -22,15 +22,21 @@ from .pf_garage_door import Status
 class GarageDoorSensorEntityDescription(SensorEntityDescription):
     """Describe a Garage Door sensor."""
 
-    value_fn: Callable[[Status], float | int]
+    value_fn: Callable[[Status], float | int | str] = lambda status: 0  # type: ignore[assignment]
 
 
 SENSORS: tuple[GarageDoorSensorEntityDescription, ...] = (
     GarageDoorSensorEntityDescription(
+        name="Position",
         key="position",
         native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda status: status.position,
+    ),
+    GarageDoorSensorEntityDescription(
+        name="State",
+        key="state",
+        value_fn=lambda status: status.state,
     ),
 )
 

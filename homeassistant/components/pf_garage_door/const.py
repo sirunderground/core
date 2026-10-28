@@ -4,4 +4,4 @@ from datetime import timedelta
 
 DOMAIN = "pf_garage_door"
 CONF_SUBSCRIPTION_ID = "subscription_id"
-SUBSCRIPTION_RENEW_INTERVAL = timedelta(hours=1)
+SUBSCRIPTION_RENEW_INTERVAL = timedelta(seconds=30)

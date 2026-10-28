@@ -59,6 +59,18 @@ class GarageDoorCover(GarageDoorEntity, CoverEntity):
         """Return whether the door is closed."""
         return self.coordinator.data.position == 0
 
+    @property
+    @override
+    def is_opening(self) -> bool:
+        """Return whether the door is opening."""
+        return self.coordinator.data.state == "opening"
+
+    @property
+    @override
+    def is_closing(self) -> bool:
+        """Return whether the door is closing."""
+        return self.coordinator.data.state == "closing"
+
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the door fully."""
         await self._move_to(100)

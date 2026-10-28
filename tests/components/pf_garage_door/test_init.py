@@ -3,6 +3,7 @@
 from datetime import timedelta
 from http import HTTPStatus
 
+from homeassistant.components.cover import CoverState
 from homeassistant.components.pf_garage_door.const import CONF_SUBSCRIPTION_ID, DOMAIN
 from homeassistant.components.pf_garage_door.pf_garage_door import Status
 from homeassistant.const import CONF_WEBHOOK_ID
@@ -24,6 +25,7 @@ STATUS_RESPONSE = {
     "firmware": "1.0.0",
     "position": 35,
     "obstruction": False,
+    "state": "stopped",
 }
 
 
@@ -83,6 +85,7 @@ async def test_webhook_updates_status(
         **STATUS_RESPONSE,
         "position": 100,
         "obstruction": True,
+        "state": "opening",
     }
     response = await client.post(
         f"/api/webhook/{WEBHOOK_ID}",
@@ -96,7 +99,17 @@ async def test_webhook_updates_status(
         firmware="1.0.0",
         position=100,
         obstruction=True,
+        state="opening",
     )
+    assert hass.states.async_all("cover")[0].state == CoverState.OPENING
+
+    pushed_status["state"] = "closing"
+    response = await client.post(
+        f"/api/webhook/{WEBHOOK_ID}",
+        json=pushed_status,
+    )
+    assert response.status == HTTPStatus.NO_CONTENT
+    assert hass.states.async_all("cover")[0].state == CoverState.CLOSING
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     assert aioclient_mock.mock_calls[-1][0] == "DELETE"

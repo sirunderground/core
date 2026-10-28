@@ -23,6 +23,7 @@ class Status:
     firmware: str
     position: int
     obstruction: bool
+    state: str
 
 
 class GarageDoorError(Exception):
@@ -66,6 +67,7 @@ class GarageDoorClient:
             firmware = data["firmware"]
             position = data["position"]
             obstruction = data["obstruction"]
+            state = data["state"]
         except KeyError as err:
             raise GarageDoorError(f"Missing {err.args[0]} in status response") from err
 
@@ -78,10 +80,11 @@ class GarageDoorClient:
             or isinstance(position, bool)
             or not 0 <= position <= 100
             or not isinstance(obstruction, bool)
+            or not isinstance(state, str)
         ):
             raise GarageDoorError("Invalid status response")
 
-        return Status(name, serial_number, firmware, position, obstruction)
+        return Status(name, serial_number, firmware, position, obstruction, state)
 
     async def move_to(self, position: int) -> None:
         """Move the door to an opening percentage from 0 (closed) to 100 (open)."""

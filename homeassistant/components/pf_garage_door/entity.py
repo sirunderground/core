@@ -1,12 +1,5 @@
 """Base entity for the Example Air integration."""
 
-# from homeassistant.components.cover import (
-#     ATTR_POSITION,
-#     CoverDeviceClass,
-#     CoverEntity,
-#     CoverEntityFeature,
-# )
-
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 

@@ -41,7 +41,8 @@
                   "serial_number": "123456789",
                   "firmware": "1.0.0",
                   "position": 0,
-                  "obstruction": false
+                  "obstruction": false,
+                  "state": "closed"
                 }
               }
             }
@@ -234,7 +235,8 @@
           "serial_number",
           "firmware",
           "position",
-          "obstruction"
+          "obstruction",
+          "state"
         ],
         "properties": {
           "name": {
@@ -259,6 +261,10 @@
           "obstruction": {
             "type": "boolean",
             "description": "Whether an obstruction is currently detected."
+          },
+          "state": {
+            "type": "string",
+            "description": "Reported door state, such as opening, closing, or stopped."
           }
         }
       },
