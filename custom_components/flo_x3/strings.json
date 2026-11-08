@@ -1,0 +1,63 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Connect to FLO",
+        "description": "Experimental: this integration uses FLO's undocumented cloud API. X3 compatibility is not verified.",
+        "data": {
+          "username": "FLO account email",
+          "password": "FLO account password"
+        }
+      },
+      "station": {
+        "title": "Select charger",
+        "data": {
+          "station_id": "Charger"
+        }
+      },
+      "reauth_confirm": {
+        "title": "Update FLO credentials",
+        "description": "Reauthenticate the FLO account for this charger.",
+        "data": {
+          "username": "FLO account email",
+          "password": "FLO account password"
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "Authentication failed. Check credentials; multifactor authentication is not supported.",
+      "cannot_connect": "Unable to connect to the FLO cloud API.",
+      "station_not_found": "The configured charger was not found in this FLO account."
+    },
+    "abort": {
+      "no_stations": "No FLO chargers were returned. The API version may not support this model."
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "online": {
+        "name": "Online"
+      },
+      "vehicle_connected": {
+        "name": "Vehicle connected"
+      },
+      "charging": {
+        "name": "Charging"
+      }
+    },
+    "sensor": {
+      "amperage": {
+        "name": "Current draw"
+      },
+      "amperage_offered": {
+        "name": "Current offered"
+      },
+      "voltage": {
+        "name": "Voltage"
+      },
+      "energy_transferred": {
+        "name": "Session energy"
+      }
+    }
+  }
+}
